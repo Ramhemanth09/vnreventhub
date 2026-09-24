@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campus Event Management | Student & Admin Portal</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header / Navigation Bar -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="brand">
+        <span class="brand-icon">🎓</span>
+        <div class="brand-text">
+          <h1>Campus Events</h1>
+          <span class="badge-subtitle">PS P01 Backend Portal</span>
+        </div>
+      </div>
+
+      <nav class="nav-links">
+        <button class="nav-btn active" data-view="eventsView">📅 Explore Events</button>
+        <button class="nav-btn" data-view="myRegistrationsView" id="myRegNavBtn" style="display:none;">🎟️ My Registrations</button>
+        <button class="nav-btn admin-nav" data-view="adminView" id="adminNavBtn" style="display:none;">👑 Admin Hub</button>
+      </nav>
+
+      <div class="nav-auth" id="navAuthSection">
+        <button class="btn btn-outline" id="openLoginModalBtn">Login</button>
+        <button class="btn btn-primary" id="openRegisterModalBtn">Sign Up</button>
+      </div>
+
+      <div class="user-profile" id="userProfileSection" style="display:none;">
+        <div class="user-badge">
+          <span class="user-avatar" id="navUserAvatar">👤</span>
+          <div class="user-info">
+            <span class="user-name" id="navUserName">Student</span>
+            <span class="role-pill" id="navUserRole">USER</span>
+          </div>
+        </div>
+        <button class="btn btn-outline-danger btn-sm" id="logoutBtn">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Notification Banner -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Main Content Container -->
+  <main class="main-container">
+    
+    <!-- Hero / Hackathon Info Banner -->
+    <div class="hackathon-banner">
+      <div class="banner-content">
+        <h2>Campus Event Management System (PS P01)</h2>
+        <p>Built with Express.js, MongoDB, Mongoose, JWT in HTTP-Only Cookies, and Strict RBAC Authorization.</p>
+      </div>
+      <div class="quick-creds">
+        <span class="quick-creds-title">⚡ Quick Login Shortcuts:</span>
+        <button class="btn-chip" onclick="quickLogin('admin@campus.edu', 'AdminPassword123')">👑 Admin</button>
+        <button class="btn-chip" onclick="quickLogin('rahul@student.edu', 'StudentPassword123')">🎓 Rahul (User)</button>
+        <button class="btn-chip" onclick="quickLogin('priya@student.edu', 'StudentPassword123')">🎓 Priya (User)</button>
+      </div>
+    </div>
+
+    <!-- VIEW 1: Events Discovery View -->
+    <section id="eventsView" class="view-section active">
+      <div class="section-header">
+        <div>
+          <h2>Available Campus Events</h2>
+          <p class="section-desc">Browse upcoming tech conferences, bootcamps, and workshops.</p>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="loadEvents()">🔄 Refresh</button>
+      </div>
+
+      <div id="eventsGrid" class="events-grid">
+        <div class="loader">Loading events...</div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: My Registrations View -->
+    <section id="myRegistrationsView" class="view-section">
+      <div class="section-header">
+        <div>
+          <h2>My Event Registrations</h2>
+          <p class="section-desc">Manage your tickets and registrations. Enforces owner-only cancellation.</p>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="loadMyRegistrations()">🔄 Refresh</button>
+      </div>
+
+      <div id="myRegistrationsList" class="registrations-list">
+        <div class="loader">Loading your registrations...</div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: Admin Management Hub -->
+    <section id="adminView" class="view-section">
+      <div class="section-header">
+        <div>
+          <h2>Administrator Control Center</h2>
+          <p class="section-desc">Create events, toggle publish/cancel state, and supervise campus registrations.</p>
+        </div>
+      </div>
+
+      <div class="admin-grid">
+        <!-- Create Event Card -->
+        <div class="card form-card">
+          <div class="card-header">
+            <h3>➕ Create New Event</h3>
+          </div>
+          <form id="createEventForm" class="app-form">
+            <div class="form-group">
+              <label>Event Title</label>
+              <input type="text" id="evTitle" required placeholder="e.g. AI & Robotics Hackathon 2026">
+            </div>
+
+            <div class="form-group">
+              <label>Description</label>
+              <textarea id="evDescription" required rows="3" placeholder="Describe the event, agenda, rules..."></textarea>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Date & Time</label>
+                <input type="datetime-local" id="evDateTime" required>
+              </div>
+
+              <div class="form-group">
+                <label>Venue</label>
+                <input type="text" id="evVenue" required placeholder="Auditorium Block B">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Capacity (Seats)</label>
+                <input type="number" id="evCapacity" required min="1" placeholder="e.g. 50">
+              </div>
+
+              <div class="form-group">
+                <label>Initial Status</label>
+                <select id="evStatus">
+                  <option value="DRAFT">DRAFT (Hidden from Students)</option>
+                  <option value="PUBLISHED">PUBLISHED (Open for Registrations)</option>
+                </select>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">Create Event</button>
+          </form>
+        </div>
+
+        <!-- Admin Event Manager & Registrations Supervisor -->
+        <div class="admin-panels">
+          <div class="card">
+            <div class="card-header">
+              <h3>📋 All Campus Events Management</h3>
+              <button class="btn btn-outline btn-sm" onclick="loadAdminEvents()">Refresh</button>
+            </div>
+            <div id="adminEventsList" class="admin-table-container">
+              <div class="loader">Loading all events...</div>
+            </div>
+          </div>
+
+          <div class="card mt-4">
+            <div class="card-header">
+              <h3>👥 Campus Registrations Roster</h3>
+              <button class="btn btn-outline btn-sm" onclick="loadAdminRegistrations()">Refresh</button>
+            </div>
+            <div id="adminRegistrationsList" class="admin-table-container">
+              <div class="loader">Loading registrations...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Login Modal -->
+  <div id="loginModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Login to Campus Events</h3>
+        <button class="close-modal" onclick="closeModal('loginModal')">&times;</button>
+      </div>
+      <form id="loginForm" class="app-form">
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="loginEmail" required placeholder="student@campus.edu">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="loginPassword" required placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Login</button>
+      </form>
+      <div class="modal-footer">
+        <span>Don't have an account? <a href="#" onclick="switchModal('loginModal', 'registerModal')">Sign Up</a></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Register Modal -->
+  <div id="registerModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Create Student Account</h3>
+        <button class="close-modal" onclick="closeModal('registerModal')">&times;</button>
+      </div>
+      <form id="registerForm" class="app-form">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="regName" required placeholder="John Doe">
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="regEmail" required placeholder="john@student.edu">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="regPassword" required minlength="6" placeholder="Min 6 characters">
+        </div>
+        <div class="form-group">
+          <label>Account Role</label>
+          <select id="regRole">
+            <option value="USER">Student (USER)</option>
+            <option value="ADMIN">Campus Administrator (ADMIN)</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Sign Up</button>
+      </form>
+      <div class="modal-footer">
+        <span>Already have an account? <a href="#" onclick="switchModal('registerModal', 'loginModal')">Login</a></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>Campus Event Management System • PS P01 Backend Hackathon Implementation</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

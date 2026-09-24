@@ -1,0 +1,35 @@
+{
+  "name": "campus-event-management",
+  "version": "1.0.0",
+  "description": "Secure REST API and Web Interface for Campus Event Management with Role-Based Access Control and JWT in HTTP-Only Cookies",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "seed": "node src/scripts/seed.js"
+  },
+  "keywords": [
+    "campus-events",
+    "express",
+    "mongodb",
+    "jwt",
+    "rbac",
+    "backend-api"
+  ],
+  "author": "Student Developer",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-validator": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.5.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  },
+  "type": "commonjs"
+}

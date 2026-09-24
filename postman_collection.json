@@ -1,0 +1,239 @@
+{
+  "info": {
+    "_postman_id": "993a6470-13b7-4c4c-bdf5-campus-event-management",
+    "name": "Campus Event Management API (PS P01)",
+    "description": "Comprehensive Postman Test Collection covering all Success and Failure test cases for Campus Event Management REST API with JWT Cookie Auth, Role-Based Access Control, and Business Rules.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api",
+      "type": "string"
+    },
+    {
+      "key": "sampleEventId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "sampleRegistrationId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Register User [SUCCESS 201]",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Vikram Adithya\",\n  \"email\": \"vikram.adithya@student.edu\",\n  \"password\": \"StudentPassword123\",\n  \"role\": \"USER\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] }
+          }
+        },
+        {
+          "name": "Register User - Duplicate Email [FAILURE 409]",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Duplicate Vikram\",\n  \"email\": \"rahul@student.edu\",\n  \"password\": \"StudentPassword123\",\n  \"role\": \"USER\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] }
+          }
+        },
+        {
+          "name": "Register User - Validation Failure (Short Password) [FAILURE 400]",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Short Pass\",\n  \"email\": \"test.short@student.edu\",\n  \"password\": \"123\",\n  \"role\": \"USER\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] }
+          }
+        },
+        {
+          "name": "Login as Admin [SUCCESS 200]",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@campus.edu\",\n  \"password\": \"AdminPassword123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Login as Student (Rahul) [SUCCESS 200]",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"rahul@student.edu\",\n  \"password\": \"StudentPassword123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Login - Invalid Credentials [FAILURE 401]",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"rahul@student.edu\",\n  \"password\": \"WrongPassword123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Get Current Profile (Me) [SUCCESS 200]",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/auth/me", "host": ["{{baseUrl}}"], "path": ["auth", "me"] }
+          }
+        },
+        {
+          "name": "Logout [SUCCESS 200]",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/auth/logout", "host": ["{{baseUrl}}"], "path": ["auth", "logout"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Events Management",
+      "item": [
+        {
+          "name": "Get All Events (Public / Student View) [SUCCESS 200]",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/events", "host": ["{{baseUrl}}"], "path": ["events"] }
+          }
+        },
+        {
+          "name": "Create Event - Admin [SUCCESS 201]",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Quantum Computing Workshop 2026\",\n  \"description\": \"Explore quantum algorithms, Qiskit, and superposition fundamentals.\",\n  \"dateTime\": \"2026-11-20T10:00:00.000Z\",\n  \"venue\": \"Physics Seminar Hall 4\",\n  \"capacity\": 30,\n  \"status\": \"DRAFT\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/events", "host": ["{{baseUrl}}"], "path": ["events"] }
+          }
+        },
+        {
+          "name": "Create Event - Student Access Denied [FAILURE 403]",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Unauthorized Student Event\",\n  \"description\": \"Student attempting to create event\",\n  \"dateTime\": \"2026-11-20T10:00:00.000Z\",\n  \"venue\": \"Auditorium\",\n  \"capacity\": 50\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/events", "host": ["{{baseUrl}}"], "path": ["events"] }
+          }
+        },
+        {
+          "name": "Publish Event - Admin [SUCCESS 200]",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{baseUrl}}/events/{{sampleEventId}}/publish", "host": ["{{baseUrl}}"], "path": ["events", "{{sampleEventId}}", "publish"] }
+          }
+        },
+        {
+          "name": "Cancel Event - Admin [SUCCESS 200]",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{baseUrl}}/events/{{sampleEventId}}/cancel", "host": ["{{baseUrl}}"], "path": ["events", "{{sampleEventId}}", "cancel"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Event Registrations",
+      "item": [
+        {
+          "name": "Register for Event [SUCCESS 201]",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/registrations/events/{{sampleEventId}}/register", "host": ["{{baseUrl}}"], "path": ["registrations", "events", "{{sampleEventId}}", "register"] }
+          }
+        },
+        {
+          "name": "Register for Event - Duplicate [FAILURE 409]",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/registrations/events/{{sampleEventId}}/register", "host": ["{{baseUrl}}"], "path": ["registrations", "events", "{{sampleEventId}}", "register"] }
+          }
+        },
+        {
+          "name": "Get My Registrations [SUCCESS 200]",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/registrations/my", "host": ["{{baseUrl}}"], "path": ["registrations", "my"] }
+          }
+        },
+        {
+          "name": "Cancel Own Registration [SUCCESS 200]",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{baseUrl}}/registrations/{{sampleRegistrationId}}/cancel", "host": ["{{baseUrl}}"], "path": ["registrations", "{{sampleRegistrationId}}", "cancel"] }
+          }
+        },
+        {
+          "name": "Cancel Registration - Already Cancelled [FAILURE 400]",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{baseUrl}}/registrations/{{sampleRegistrationId}}/cancel", "host": ["{{baseUrl}}"], "path": ["registrations", "{{sampleRegistrationId}}", "cancel"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Admin Management",
+      "item": [
+        {
+          "name": "Admin: Get All Campus Registrations [SUCCESS 200]",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/admin/registrations", "host": ["{{baseUrl}}"], "path": ["admin", "registrations"] }
+          }
+        },
+        {
+          "name": "Admin: Update Registration Status (Mark Attended) [SUCCESS 200]",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ATTENDED\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/admin/registrations/{{sampleRegistrationId}}/status", "host": ["{{baseUrl}}"], "path": ["admin", "registrations", "{{sampleRegistrationId}}", "status"] }
+          }
+        },
+        {
+          "name": "Student accessing Admin Roster [FAILURE 403]",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/admin/registrations", "host": ["{{baseUrl}}"], "path": ["admin", "registrations"] }
+          }
+        }
+      ]
+    }
+  ]
+}
