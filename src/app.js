@@ -11,7 +11,7 @@ const { errorHandler, notFound } = require('./middleware/error.middleware');
 
 const app = express();
 
-// 1. Trust Proxy for Cloud Hosting (Render, Vercel, Railway, Heroku)
+// 1. Trust Proxy for Cloud Hosting (Vercel, Render, Railway, Heroku)
 app.set('trust proxy', 1);
 
 // 2. Core Middlewares
@@ -25,9 +25,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// 3. Serve Static Frontend Web Portal (from public or root)
-app.use(express.static(path.join(__dirname, '../public')));
-app.use(express.static(path.join(__dirname, '..')));
+// 3. Static Files Serving (Serves public/ folder for UI assets)
+const publicPath = path.resolve(__dirname, '../public');
+app.use(express.static(publicPath));
 
 // 4. API Health Check Endpoint
 app.get('/api/health', (req, res) => {
@@ -45,16 +45,16 @@ app.use('/api/events', eventRoutes);
 app.use('/api/registrations', registrationRoutes);
 app.use('/api/admin', adminRoutes);
 
-// 6. Frontend SPA Fallback Route
+// 6. Serve Frontend Landing Page (Root & SPA Fallback)
+app.get('/', (req, res) => {
+  res.sendFile(path.join(publicPath, 'index.html'));
+});
+
 app.get('*', (req, res, next) => {
   if (req.originalUrl.startsWith('/api')) {
     return next();
   }
-  const publicIndex = path.join(__dirname, '../public/index.html');
-  const rootIndex = path.join(__dirname, '../index.html');
-  res.sendFile(publicIndex, (err) => {
-    if (err) res.sendFile(rootIndex);
-  });
+  res.sendFile(path.join(publicPath, 'index.html'));
 });
 
 // 7. 404 Handler for Unmatched API Endpoints
