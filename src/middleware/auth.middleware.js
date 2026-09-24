@@ -4,6 +4,8 @@ const { getDBStatus } = require('../config/db');
 const memoryStore = require('../config/memoryStore');
 const AppError = require('../utils/AppError');
 
+const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_campus_event_management_jwt_key_2026';
+
 /**
  * Authentication Middleware
  * Verifies JWT token from HTTP-only cookie and attaches authenticated user to req.user.
@@ -29,7 +31,7 @@ const protect = async (req, res, next) => {
     }
 
     // 2) Verify token signature and expiration
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET);
 
     // 3) Check if user still exists
     let currentUser;
@@ -81,7 +83,7 @@ const optionalAuth = async (req, res, next) => {
       return next();
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET);
     let currentUser;
     if (getDBStatus()) {
       currentUser = await User.findById(decoded.id);

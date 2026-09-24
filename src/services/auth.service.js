@@ -9,21 +9,23 @@ const AppError = require('../utils/AppError');
  * Generate JWT Token
  */
 const signToken = (id, role) => {
-  return jwt.sign({ id, role }, process.env.JWT_SECRET, {
+  return jwt.sign({ id, role }, process.env.JWT_SECRET || 'super_secret_campus_event_management_jwt_key_2026', {
     expiresIn: process.env.JWT_EXPIRES_IN || '7d'
   });
 };
 
 /**
- * Configure secure HTTP-Only Cookie options
+ * Configure secure HTTP-Only Cookie options for Production & Local environments
  */
 const getCookieOptions = () => {
   const days = parseInt(process.env.JWT_COOKIE_EXPIRES_IN_DAYS || '7', 10);
+  const isProd = process.env.NODE_ENV === 'production';
   return {
     expires: new Date(Date.now() + days * 24 * 60 * 60 * 1000),
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax'
+    secure: isProd, // HTTPS in production
+    sameSite: 'lax', // Standard CSRF protection across modern browsers
+    path: '/'
   };
 };
 
@@ -64,7 +66,7 @@ const register = async ({
     const token = signToken(user._id, user.role);
     return { user, token };
   } else {
-    // In-Memory Mode
+    // In-Memory Fallback Mode
     const existingUser = memoryStore.users.find(
       (u) => u.email.toLowerCase() === normalizedEmail
     );
