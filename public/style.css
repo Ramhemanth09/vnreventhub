@@ -426,6 +426,10 @@ body {
   gap: 0.75rem;
 }
 
+@media (max-width: 500px) {
+  .form-row { grid-template-columns: 1fr; }
+}
+
 label {
   display: block;
   font-size: 0.8rem;
@@ -478,6 +482,7 @@ input:focus, textarea:focus, select:focus {
   color: var(--text-primary);
 }
 
+.mt-2 { margin-top: 0.5rem; }
 .mt-4 { margin-top: 1.25rem; }
 
 /* Modals */
@@ -493,6 +498,7 @@ input:focus, textarea:focus, select:focus {
   z-index: 200;
   align-items: center;
   justify-content: center;
+  padding: 1rem;
 }
 
 .modal.active {
@@ -505,8 +511,14 @@ input:focus, textarea:focus, select:focus {
   border-radius: var(--radius-lg);
   padding: 1.75rem;
   width: 100%;
-  max-width: 420px;
+  max-width: 440px;
   box-shadow: var(--shadow-lg);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-content.modal-lg {
+  max-width: 580px;
 }
 
 .modal-header {

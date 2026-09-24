@@ -15,13 +15,18 @@ class MemoryStore {
   async initSeed() {
     if (this.isInitialized) return;
 
-    // 1. Create Default Users (Hashed Passwords)
+    // 1. Create Default Users (Hashed Passwords + Student Information)
     const adminPassword = await bcrypt.hash('AdminPassword123', 10);
     const studentPassword = await bcrypt.hash('StudentPassword123', 10);
 
     const admin = {
       _id: '66f2a1b1c1d1e1f1a1b1c101',
       name: 'Campus Administrator',
+      rollNo: 'ADMIN-001',
+      year: 'Faculty',
+      branch: 'Administration',
+      section: 'Main',
+      mobileNo: '9876543210',
       email: 'admin@campus.edu',
       password: adminPassword,
       role: 'ADMIN',
@@ -32,6 +37,11 @@ class MemoryStore {
     const student1 = {
       _id: '66f2a1b1c1d1e1f1a1b1c102',
       name: 'Rahul Sharma',
+      rollNo: '21B91A0501',
+      year: '3rd Year',
+      branch: 'CSE',
+      section: 'A',
+      mobileNo: '9848012345',
       email: 'rahul@student.edu',
       password: studentPassword,
       role: 'USER',
@@ -42,6 +52,11 @@ class MemoryStore {
     const student2 = {
       _id: '66f2a1b1c1d1e1f1a1b1c103',
       name: 'Priya Patel',
+      rollNo: '22B91A0412',
+      year: '2nd Year',
+      branch: 'ECE',
+      section: 'B',
+      mobileNo: '9848056789',
       email: 'priya@student.edu',
       password: studentPassword,
       role: 'USER',
@@ -52,6 +67,11 @@ class MemoryStore {
     const student3 = {
       _id: '66f2a1b1c1d1e1f1a1b1c104',
       name: 'Amit Verma',
+      rollNo: '20B91A1205',
+      year: '4th Year',
+      branch: 'IT',
+      section: 'A',
+      mobileNo: '9848099887',
       email: 'amit@student.edu',
       password: studentPassword,
       role: 'USER',
@@ -148,7 +168,7 @@ class MemoryStore {
 
     this.registrations = [reg1, reg2];
     this.isInitialized = true;
-    console.log('🌱 In-Memory Database initialized with seed dataset (Admin + Students + Events + Registrations).');
+    console.log('🌱 In-Memory Database initialized with student profiles & seed dataset.');
   }
 
   generateId() {

@@ -28,9 +28,19 @@ const getCookieOptions = () => {
 };
 
 /**
- * Register a new User
+ * Register a new User with full student profile information
  */
-const register = async ({ name, email, password, role }) => {
+const register = async ({
+  name,
+  rollNo = '',
+  year = '',
+  branch = '',
+  section = '',
+  mobileNo = '',
+  email,
+  password,
+  role = 'USER'
+}) => {
   const normalizedEmail = email.toLowerCase().trim();
 
   if (getDBStatus()) {
@@ -41,6 +51,11 @@ const register = async ({ name, email, password, role }) => {
 
     const user = await User.create({
       name,
+      rollNo: rollNo ? rollNo.trim().toUpperCase() : '',
+      year: year ? year.trim() : '',
+      branch: branch ? branch.trim().toUpperCase() : '',
+      section: section ? section.trim().toUpperCase() : '',
+      mobileNo: mobileNo ? mobileNo.trim() : '',
       email: normalizedEmail,
       password,
       role: role || 'USER'
@@ -61,6 +76,11 @@ const register = async ({ name, email, password, role }) => {
     const newUser = {
       _id: memoryStore.generateId(),
       name,
+      rollNo: rollNo ? rollNo.trim().toUpperCase() : '',
+      year: year ? year.trim() : '',
+      branch: branch ? branch.trim().toUpperCase() : '',
+      section: section ? section.trim().toUpperCase() : '',
+      mobileNo: mobileNo ? mobileNo.trim() : '',
       email: normalizedEmail,
       password: hashedPassword,
       role: role || 'USER',

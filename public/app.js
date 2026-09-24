@@ -128,7 +128,7 @@ async function quickLogin(email, password) {
       showToast(data.message || 'Login failed', 'error');
     }
   } catch (err) {
-    showToast('Network error during login. Make sure MongoDB & backend are running.', 'error');
+    showToast('Network error during login.', 'error');
   }
 }
 
@@ -182,10 +182,15 @@ function setupForms() {
     }
   });
 
-  // Register Form
+  // Register Form (Complete Student Profile)
   document.getElementById('registerForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = document.getElementById('regName').value;
+    const rollNo = document.getElementById('regRollNo').value;
+    const year = document.getElementById('regYear').value;
+    const branch = document.getElementById('regBranch').value;
+    const section = document.getElementById('regSection').value;
+    const mobileNo = document.getElementById('regMobileNo').value;
     const email = document.getElementById('regEmail').value;
     const password = document.getElementById('regPassword').value;
     const role = document.getElementById('regRole').value;
@@ -194,18 +199,29 @@ function setupForms() {
       const res = await fetch(`${API_BASE}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, role }),
+        body: JSON.stringify({
+          name,
+          rollNo,
+          year,
+          branch,
+          section,
+          mobileNo,
+          email,
+          password,
+          role
+        }),
         credentials: 'include'
       });
       const data = await res.json();
       if (res.ok && data && data.data && data.data.user) {
         currentUser = data.data.user;
         closeModal('registerModal');
+        document.getElementById('registerForm').reset();
         renderUserHeader();
-        showToast('Account created and logged in!', 'success');
+        showToast(`Welcome ${currentUser.name}! Account created and signed in.`, 'success');
         loadEvents();
       } else {
-        const errMsg = data.errors ? data.errors.map(e => e.message).join(', ') : data.message;
+        const errMsg = data.errors ? data.errors.map((e) => e.message).join(', ') : data.message;
         showToast(errMsg || 'Registration failed', 'error');
       }
     } catch (err) {
@@ -236,7 +252,7 @@ function setupForms() {
         document.getElementById('createEventForm').reset();
         loadAdminEvents();
       } else {
-        const errMsg = data.errors ? data.errors.map(e => e.message).join(', ') : data.message;
+        const errMsg = data.errors ? data.errors.map((e) => e.message).join(', ') : data.message;
         showToast(errMsg || 'Failed to create event', 'error');
       }
     } catch (err) {
@@ -269,8 +285,7 @@ async function loadEvents() {
     const result = await res.json();
 
     if (!result || !result.success || !result.data || !Array.isArray(result.data.events) || result.data.events.length === 0) {
-      const msg = (result && result.message) ? result.message : 'No events available. (Run <code>npm run seed</code> in terminal to create sample events).';
-      eventsGrid.innerHTML = `<div class="empty-state">${msg}</div>`;
+      eventsGrid.innerHTML = `<div class="empty-state">No events available at this time.</div>`;
       return;
     }
 
@@ -320,14 +335,14 @@ async function loadEvents() {
       `;
     }).join('');
   } catch (err) {
-    eventsGrid.innerHTML = '<div class="empty-state">Failed to reach server. Please make sure MongoDB and Express are running.</div>';
+    eventsGrid.innerHTML = '<div class="empty-state">Failed to reach server.</div>';
   }
 }
 
 // 2. Register for Event Handler
 async function handleRegister(eventId) {
   if (!currentUser) {
-    showToast('Please log in first to register for events', 'info');
+    showToast('Please log in or sign up first to register for events', 'info');
     openModal('loginModal');
     return;
   }
@@ -376,7 +391,7 @@ async function loadMyRegistrations() {
             </div>
             <span class="badge badge-${(reg.status || 'REGISTERED').toLowerCase()}">${reg.status}</span>
           </div>
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; flex-wrap: wrap; gap: 0.5rem;">
             <span style="font-size: 0.8rem; color: var(--text-secondary);">Registered on: ${new Date(reg.registeredAt).toLocaleDateString()}</span>
             ${
               isCancelable
@@ -494,7 +509,7 @@ async function adminCancelEvent(id) {
   }
 }
 
-// 6. Admin: Load Registrations Table
+// 6. Admin: Load Registrations Table (With Student Details)
 async function loadAdminRegistrations() {
   adminRegistrationsList.innerHTML = '<div class="loader">Loading roster...</div>';
   try {
@@ -510,27 +525,43 @@ async function loadAdminRegistrations() {
       <table class="data-table">
         <thead>
           <tr>
-            <th>Student</th>
-            <th>Event</th>
+            <th>Student Details</th>
+            <th>Branch / Year / Sec</th>
+            <th>Event Registered</th>
             <th>Status</th>
             <th>Action</th>
           </tr>
         </thead>
         <tbody>
-          ${result.data.registrations.map(reg => `
-            <tr>
-              <td><strong>${escapeHtml(reg.user ? reg.user.name : 'Unknown')}</strong><br><small style="color:var(--text-secondary)">${escapeHtml(reg.user ? reg.user.email : '')}</small></td>
-              <td>${escapeHtml(reg.event ? reg.event.title : 'Deleted Event')}</td>
-              <td><span class="badge badge-${(reg.status || 'REGISTERED').toLowerCase()}">${reg.status}</span></td>
-              <td>
-                <select onchange="adminUpdateRegStatus('${reg._id}', this.value)" style="padding: 0.2rem 0.5rem; font-size: 0.78rem;">
-                  <option value="REGISTERED" ${reg.status === 'REGISTERED' ? 'selected' : ''}>REGISTERED</option>
-                  <option value="ATTENDED" ${reg.status === 'ATTENDED' ? 'selected' : ''}>ATTENDED</option>
-                  <option value="CANCELLED" ${reg.status === 'CANCELLED' ? 'selected' : ''}>CANCELLED</option>
-                </select>
-              </td>
-            </tr>
-          `).join('')}
+          ${result.data.registrations.map((reg) => {
+            const u = reg.user || {};
+            const ev = reg.event || {};
+            return `
+              <tr>
+                <td>
+                  <strong>${escapeHtml(u.name || 'Unknown')}</strong><br>
+                  <small style="color:var(--text-secondary)">🆔 Roll: ${escapeHtml(u.rollNo || 'N/A')} | 📞 ${escapeHtml(u.mobileNo || 'N/A')}</small><br>
+                  <small style="color:var(--accent-primary)">✉️ ${escapeHtml(u.email || '')}</small>
+                </td>
+                <td>
+                  <strong>${escapeHtml(u.branch || 'N/A')}</strong><br>
+                  <small style="color:var(--text-secondary)">${escapeHtml(u.year || 'N/A')} - Sec ${escapeHtml(u.section || 'N/A')}</small>
+                </td>
+                <td>
+                  <strong>${escapeHtml(ev.title || 'Deleted Event')}</strong><br>
+                  <small style="color:var(--text-secondary)">📍 ${escapeHtml(ev.venue || 'N/A')}</small>
+                </td>
+                <td><span class="badge badge-${(reg.status || 'REGISTERED').toLowerCase()}">${reg.status}</span></td>
+                <td>
+                  <select onchange="adminUpdateRegStatus('${reg._id}', this.value)" style="padding: 0.25rem 0.5rem; font-size: 0.78rem;">
+                    <option value="REGISTERED" ${reg.status === 'REGISTERED' ? 'selected' : ''}>REGISTERED</option>
+                    <option value="ATTENDED" ${reg.status === 'ATTENDED' ? 'selected' : ''}>ATTENDED</option>
+                    <option value="CANCELLED" ${reg.status === 'CANCELLED' ? 'selected' : ''}>CANCELLED</option>
+                  </select>
+                </td>
+              </tr>
+            `;
+          }).join('')}
         </tbody>
       </table>
     `;

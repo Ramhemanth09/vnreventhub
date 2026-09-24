@@ -211,7 +211,7 @@ const cancelUserRegistration = async (registrationId, userId) => {
 };
 
 /**
- * Admin: View all registrations across the campus
+ * Admin: View all registrations across the campus with full student details
  */
 const getAllRegistrationsAdmin = async (query = {}) => {
   if (getDBStatus()) {
@@ -220,7 +220,7 @@ const getAllRegistrationsAdmin = async (query = {}) => {
     if (query.eventId) filter.event = query.eventId;
 
     const registrations = await Registration.find(filter)
-      .populate('user', 'name email role')
+      .populate('user', 'name email role rollNo year branch section mobileNo')
       .populate('event', 'title dateTime venue capacity status')
       .sort({ registeredAt: -1 });
 
@@ -230,15 +230,29 @@ const getAllRegistrationsAdmin = async (query = {}) => {
     if (query.status) list = list.filter((r) => r.status === query.status);
     if (query.eventId) list = list.filter((r) => r.event.toString() === query.eventId.toString());
 
-    return list.map((r) => {
-      const u = memoryStore.users.find((user) => user._id.toString() === r.user.toString());
-      const ev = memoryStore.events.find((event) => event._id.toString() === r.event.toString());
-      return {
-        ...r,
-        user: u ? { name: u.name, email: u.email, role: u.role } : null,
-        event: ev || null
-      };
-    }).sort((a, b) => new Date(b.registeredAt) - new Date(a.registeredAt));
+    return list
+      .map((r) => {
+        const u = memoryStore.users.find((user) => user._id.toString() === r.user.toString());
+        const ev = memoryStore.events.find((event) => event._id.toString() === r.event.toString());
+        return {
+          ...r,
+          user: u
+            ? {
+                _id: u._id,
+                name: u.name,
+                email: u.email,
+                role: u.role,
+                rollNo: u.rollNo || 'N/A',
+                year: u.year || 'N/A',
+                branch: u.branch || 'N/A',
+                section: u.section || 'N/A',
+                mobileNo: u.mobileNo || 'N/A'
+              }
+            : null,
+          event: ev || null
+        };
+      })
+      .sort((a, b) => new Date(b.registeredAt) - new Date(a.registeredAt));
   }
 };
 
@@ -248,7 +262,7 @@ const getAllRegistrationsAdmin = async (query = {}) => {
 const updateRegistrationStatusAdmin = async (registrationId, status) => {
   if (getDBStatus()) {
     const registration = await Registration.findById(registrationId)
-      .populate('user', 'name email')
+      .populate('user', 'name email rollNo branch')
       .populate('event', 'title dateTime');
 
     if (!registration) {
@@ -273,7 +287,7 @@ const updateRegistrationStatusAdmin = async (registrationId, status) => {
 
     return {
       ...reg,
-      user: u ? { name: u.name, email: u.email } : null,
+      user: u ? { name: u.name, email: u.email, rollNo: u.rollNo } : null,
       event: ev || null
     };
   }

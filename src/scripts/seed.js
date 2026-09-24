@@ -22,10 +22,15 @@ const seedDatabase = async () => {
     await Event.deleteMany({});
     await Registration.deleteMany({});
 
-    // 2. Create Users (1 ADMIN, 3 STUDENTS)
-    console.log('👤 Creating users...');
+    // 2. Create Users with Full Student Profiles
+    console.log('👤 Creating users with student profiles...');
     const admin = await User.create({
       name: 'Campus Administrator',
+      rollNo: 'ADMIN-001',
+      year: 'Faculty',
+      branch: 'Administration',
+      section: 'Main',
+      mobileNo: '9876543210',
       email: 'admin@campus.edu',
       password: 'AdminPassword123',
       role: 'ADMIN'
@@ -33,6 +38,11 @@ const seedDatabase = async () => {
 
     const student1 = await User.create({
       name: 'Rahul Sharma',
+      rollNo: '21B91A0501',
+      year: '3rd Year',
+      branch: 'CSE',
+      section: 'A',
+      mobileNo: '9848012345',
       email: 'rahul@student.edu',
       password: 'StudentPassword123',
       role: 'USER'
@@ -40,6 +50,11 @@ const seedDatabase = async () => {
 
     const student2 = await User.create({
       name: 'Priya Patel',
+      rollNo: '22B91A0412',
+      year: '2nd Year',
+      branch: 'ECE',
+      section: 'B',
+      mobileNo: '9848056789',
       email: 'priya@student.edu',
       password: 'StudentPassword123',
       role: 'USER'
@@ -47,6 +62,11 @@ const seedDatabase = async () => {
 
     const student3 = await User.create({
       name: 'Amit Verma',
+      rollNo: '20B91A1205',
+      year: '4th Year',
+      branch: 'IT',
+      section: 'A',
+      mobileNo: '9848099887',
       email: 'amit@student.edu',
       password: 'StudentPassword123',
       role: 'USER'
@@ -88,7 +108,7 @@ const seedDatabase = async () => {
       description: 'Intensive hands-on lab on web vulnerability assessment, API security, and CTF challenges. Limited lab seats available!',
       dateTime: tomorrow,
       venue: 'Cyber Defense Lab 102',
-      capacity: 2, // Low capacity to test capacity business rules
+      capacity: 2,
       status: 'PUBLISHED',
       createdBy: admin._id
     });
@@ -105,14 +125,12 @@ const seedDatabase = async () => {
 
     // 4. Create Sample Registrations
     console.log('📝 Creating sample registrations...');
-    // Rahul registers for Cloud Conference
     await Registration.create({
       user: student1._id,
       event: publishedEvent1._id,
       status: 'REGISTERED'
     });
 
-    // Priya registers for Ethical Hacking Bootcamp (1 of 2 seats filled)
     await Registration.create({
       user: student2._id,
       event: nearlyFullEvent._id,
@@ -120,34 +138,8 @@ const seedDatabase = async () => {
     });
 
     console.log('\n===============================================================');
-    console.log('🎉 SEEDING COMPLETED SUCCESSFULLY!');
+    console.log('🎉 SEEDING COMPLETED WITH STUDENT PROFILES!');
     console.log('===============================================================');
-    console.log('\n🔑 TEST CREDENTIALS:');
-    console.log('---------------------------------------------------------------');
-    console.log('👑 [ADMIN]');
-    console.log('   Email:    admin@campus.edu');
-    console.log('   Password: AdminPassword123');
-    console.log('   Role:     ADMIN\n');
-    console.log('🎓 [STUDENT 1]');
-    console.log('   Email:    rahul@student.edu');
-    console.log('   Password: StudentPassword123');
-    console.log('   Role:     USER\n');
-    console.log('🎓 [STUDENT 2]');
-    console.log('   Email:    priya@student.edu');
-    console.log('   Password: StudentPassword123');
-    console.log('   Role:     USER\n');
-    console.log('🎓 [STUDENT 3]');
-    console.log('   Email:    amit@student.edu');
-    console.log('   Password: StudentPassword123');
-    console.log('   Role:     USER');
-    console.log('---------------------------------------------------------------');
-    console.log('📊 SEED EVENTS CREATED:');
-    console.log(` 1. [DRAFT]        ${draftEvent.title}`);
-    console.log(` 2. [PUBLISHED]    ${publishedEvent1.title} (Cap: 100, Reg: 1)`);
-    console.log(` 3. [NEARLY FULL]  ${nearlyFullEvent.title} (Cap: 2, Reg: 1)`);
-    console.log(` 4. [CANCELLED]    ${cancelledEvent.title}`);
-    console.log('===============================================================\n');
-
     process.exit(0);
   } catch (error) {
     console.error('❌ Error during database seeding:', error);

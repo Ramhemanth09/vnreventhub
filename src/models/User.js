@@ -5,19 +5,47 @@ const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, 'Please provide your name'],
+      required: [true, 'Please provide your full name'],
       trim: true,
-      maxlength: [50, 'Name cannot exceed 50 characters']
+      maxlength: [60, 'Name cannot exceed 60 characters']
+    },
+    rollNo: {
+      type: String,
+      trim: true,
+      uppercase: true,
+      default: ''
+    },
+    year: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    branch: {
+      type: String,
+      trim: true,
+      uppercase: true,
+      default: ''
+    },
+    section: {
+      type: String,
+      trim: true,
+      uppercase: true,
+      default: ''
+    },
+    mobileNo: {
+      type: String,
+      trim: true,
+      default: ''
     },
     email: {
       type: String,
-      required: [true, 'Please provide your email address'],
+      required: [true, 'Please provide your college email address'],
       unique: true,
       lowercase: true,
       trim: true,
       match: [
         /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
-        'Please provide a valid email address'
+        'Please provide a valid college email address'
       ]
     },
     password: {
@@ -49,9 +77,7 @@ const userSchema = new mongoose.Schema(
 
 // Hash password before saving to database
 userSchema.pre('save', async function (next) {
-  // Only hash password if it has been modified (or is new)
   if (!this.isModified('password')) return next();
-
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
   next();
