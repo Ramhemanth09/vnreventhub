@@ -5,13 +5,11 @@ const registerValidator = [
     .trim()
     .notEmpty()
     .withMessage('Full name is required')
-    .isLength({ max: 60 })
-    .withMessage('Name cannot exceed 60 characters'),
+    .isLength({ max: 100 })
+    .withMessage('Name cannot exceed 100 characters'),
   body('rollNo')
     .optional({ checkFalsy: true })
-    .trim()
-    .isLength({ min: 2, max: 20 })
-    .withMessage('Roll Number should be between 2 and 20 characters'),
+    .trim(),
   body('year')
     .optional({ checkFalsy: true })
     .trim(),
@@ -23,16 +21,13 @@ const registerValidator = [
     .trim(),
   body('mobileNo')
     .optional({ checkFalsy: true })
-    .trim()
-    .matches(/^[0-9+\-\s]{8,15}$/)
-    .withMessage('Please provide a valid mobile number (e.g. 9876543210)'),
+    .trim(),
   body('email')
     .trim()
     .notEmpty()
     .withMessage('College email is required')
     .isEmail()
-    .withMessage('Please provide a valid college email address')
-    .normalizeEmail(),
+    .withMessage('Please provide a valid email address'),
   body('password')
     .notEmpty()
     .withMessage('Password is required')
@@ -50,8 +45,7 @@ const loginValidator = [
     .notEmpty()
     .withMessage('Email is required')
     .isEmail()
-    .withMessage('Please provide a valid email address')
-    .normalizeEmail(),
+    .withMessage('Please provide a valid email address'),
   body('password')
     .notEmpty()
     .withMessage('Password is required')

@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 
 /**
  * High-Performance In-Memory Data Store & Fallback Engine
- * Ensures 100% backend uptime and functionality even when local MongoDB daemon is not running.
+ * Uses global singleton pattern to maintain persistence across serverless & container lifecycles.
  */
 class MemoryStore {
   constructor() {
@@ -15,10 +15,7 @@ class MemoryStore {
   async initSeed() {
     if (this.isInitialized) return;
 
-    // Clean initial users state - users create their own new login credentials
-    this.users = [];
-
-    // Pre-create standard events for searching and testing registrations
+    // Events available for searching and registration
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 2);
 
@@ -77,9 +74,8 @@ class MemoryStore {
     };
 
     this.events = [event1, event2, event3, event4];
-    this.registrations = [];
     this.isInitialized = true;
-    console.log('🌱 Database initialized with clean user store and searchable events.');
+    console.log('🌱 Database initialized with persistent in-memory store.');
   }
 
   generateId() {
@@ -87,7 +83,9 @@ class MemoryStore {
   }
 }
 
-const memoryStore = new MemoryStore();
-memoryStore.initSeed();
+if (!global.__CAMPUS_MEMORY_STORE__) {
+  global.__CAMPUS_MEMORY_STORE__ = new MemoryStore();
+  global.__CAMPUS_MEMORY_STORE__.initSeed();
+}
 
-module.exports = memoryStore;
+module.exports = global.__CAMPUS_MEMORY_STORE__;

@@ -39,7 +39,7 @@ function showToast(message, type = 'info') {
   setTimeout(() => {
     toast.style.opacity = '0';
     setTimeout(() => toast.remove(), 300);
-  }, 4000);
+  }, 4500);
 }
 
 // Navigation Tab Switching
@@ -138,7 +138,7 @@ function setupForms() {
   // Login Form
   document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const email = document.getElementById('loginEmail').value;
+    const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
 
     try {
@@ -156,23 +156,26 @@ function setupForms() {
         showToast('Login successful!', 'success');
         loadEvents();
       } else {
-        showToast(data.message || 'Login failed', 'error');
+        showToast(data.message || 'Login failed. Please check credentials.', 'error');
       }
     } catch (err) {
-      showToast('Network error during login', 'error');
+      showToast('Network error during login.', 'error');
     }
   });
 
   // Register Form (Complete Student Profile)
   document.getElementById('registerForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const name = document.getElementById('regName').value;
-    const rollNo = document.getElementById('regRollNo').value;
-    const year = document.getElementById('regYear').value;
-    const branch = document.getElementById('regBranch').value;
-    const section = document.getElementById('regSection').value;
-    const mobileNo = document.getElementById('regMobileNo').value;
-    const email = document.getElementById('regEmail').value;
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.disabled = true;
+
+    const name = document.getElementById('regName').value.trim();
+    const rollNo = (document.getElementById('regRollNo').value || '').trim();
+    const year = (document.getElementById('regYear').value || '').trim();
+    const branch = (document.getElementById('regBranch').value || '').trim();
+    const section = (document.getElementById('regSection').value || '').trim();
+    const mobileNo = (document.getElementById('regMobileNo').value || '').trim();
+    const email = document.getElementById('regEmail').value.trim();
     const password = document.getElementById('regPassword').value;
     const role = document.getElementById('regRole').value;
 
@@ -199,24 +202,26 @@ function setupForms() {
         closeModal('registerModal');
         document.getElementById('registerForm').reset();
         renderUserHeader();
-        showToast(`Welcome ${currentUser.name}! Account created and signed in.`, 'success');
+        showToast(`Welcome ${currentUser.name}! Account registered successfully.`, 'success');
         loadEvents();
       } else {
-        const errMsg = data.errors ? data.errors.map((e) => e.message).join(', ') : data.message;
+        const errMsg = data.errors ? data.errors.map((err) => err.message).join('. ') : data.message;
         showToast(errMsg || 'Registration failed', 'error');
       }
     } catch (err) {
-      showToast('Network error during registration', 'error');
+      showToast('Network error during registration.', 'error');
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
     }
   });
 
   // Create Event Form (Admin)
   document.getElementById('createEventForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const title = document.getElementById('evTitle').value;
-    const description = document.getElementById('evDescription').value;
+    const title = document.getElementById('evTitle').value.trim();
+    const description = document.getElementById('evDescription').value.trim();
     const dateTime = new Date(document.getElementById('evDateTime').value).toISOString();
-    const venue = document.getElementById('evVenue').value;
+    const venue = document.getElementById('evVenue').value.trim();
     const capacity = parseInt(document.getElementById('evCapacity').value, 10);
     const status = document.getElementById('evStatus').value;
 
@@ -273,7 +278,7 @@ async function loadEvents() {
     }
 
     allLoadedEvents = result.data.events;
-    handleSearchInput(); // Render with current search query or full list
+    handleSearchInput();
   } catch (err) {
     eventsGrid.innerHTML = '<div class="empty-state">Failed to reach server.</div>';
   }
