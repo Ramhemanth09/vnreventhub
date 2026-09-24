@@ -17,7 +17,7 @@
         <span class="brand-icon">🎓</span>
         <div class="brand-text">
           <h1>Campus Events</h1>
-          <span class="badge-subtitle">PS P01 Backend Portal</span>
+          <span class="badge-subtitle">Event Management Portal</span>
         </div>
       </div>
 
@@ -51,28 +51,31 @@
   <!-- Main Content Container -->
   <main class="main-container">
     
-    <!-- Hero / Hackathon Info Banner -->
-    <div class="hackathon-banner">
-      <div class="banner-content">
-        <h2>Campus Event Management System (PS P01)</h2>
-        <p>Built with Express.js, MongoDB, Mongoose, JWT in HTTP-Only Cookies, and Strict RBAC Authorization.</p>
-      </div>
-      <div class="quick-creds">
-        <span class="quick-creds-title">⚡ Quick Login Shortcuts:</span>
-        <button class="btn-chip" onclick="quickLogin('admin@campus.edu', 'AdminPassword123')">👑 Admin</button>
-        <button class="btn-chip" onclick="quickLogin('rahul@student.edu', 'StudentPassword123')">🎓 Rahul (CSE)</button>
-        <button class="btn-chip" onclick="quickLogin('priya@student.edu', 'StudentPassword123')">🎓 Priya (ECE)</button>
-      </div>
-    </div>
-
-    <!-- VIEW 1: Events Discovery View -->
+    <!-- VIEW 1: Events Discovery View with Search Bar -->
     <section id="eventsView" class="view-section active">
       <div class="section-header">
         <div>
           <h2>Available Campus Events</h2>
-          <p class="section-desc">Browse upcoming technical conferences, workshops, and hackathons.</p>
+          <p class="section-desc">Search and discover technical conferences, workshops, and hackathons.</p>
         </div>
         <button class="btn btn-outline btn-sm" onclick="loadEvents()">🔄 Refresh</button>
+      </div>
+
+      <!-- Modern Search & Filter Bar -->
+      <div class="search-bar-container">
+        <div class="search-input-wrapper">
+          <span class="search-icon">🔍</span>
+          <input 
+            type="text" 
+            id="eventSearchInput" 
+            placeholder="Search events by title, venue, or keyword..." 
+            oninput="handleSearchInput()"
+          >
+          <button id="clearSearchBtn" class="clear-search-btn" style="display:none;" onclick="clearSearch()">&times;</button>
+        </div>
+        <div class="search-stats" id="searchStats">
+          Showing all events
+        </div>
       </div>
 
       <div id="eventsGrid" class="events-grid">
@@ -85,7 +88,7 @@
       <div class="section-header">
         <div>
           <h2>My Event Registrations</h2>
-          <p class="section-desc">Manage your tickets and registrations. Enforces owner-only cancellation.</p>
+          <p class="section-desc">Manage your registered tickets. Enforces owner-only cancellation.</p>
         </div>
         <button class="btn btn-outline btn-sm" onclick="loadMyRegistrations()">🔄 Refresh</button>
       </div>
@@ -142,8 +145,8 @@
               <div class="form-group">
                 <label>Initial Status</label>
                 <select id="evStatus">
-                  <option value="DRAFT">DRAFT (Hidden from Students)</option>
                   <option value="PUBLISHED">PUBLISHED (Open for Registrations)</option>
+                  <option value="DRAFT">DRAFT (Hidden from Students)</option>
                 </select>
               </div>
             </div>
@@ -207,7 +210,7 @@
   <div id="registerModal" class="modal">
     <div class="modal-content modal-lg">
       <div class="modal-header">
-        <h3>🎓 Create Account / Sign In</h3>
+        <h3>🎓 Create Account / Sign Up</h3>
         <button class="close-modal" onclick="closeModal('registerModal')">&times;</button>
       </div>
       <form id="registerForm" class="app-form">
@@ -294,7 +297,7 @@
 
   <!-- Footer -->
   <footer class="footer">
-    <p>Campus Event Management System • PS P01 Backend Hackathon Implementation</p>
+    <p>Campus Event Management System • PS P01 Backend Implementation</p>
   </footer>
 
   <script src="app.js"></script>

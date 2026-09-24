@@ -1,5 +1,6 @@
 // Client-side Application State
 let currentUser = null;
+let allLoadedEvents = [];
 
 const API_BASE = '/api';
 
@@ -14,6 +15,9 @@ const navUserName = document.getElementById('navUserName');
 const navUserRole = document.getElementById('navUserRole');
 const myRegNavBtn = document.getElementById('myRegNavBtn');
 const adminNavBtn = document.getElementById('adminNavBtn');
+const eventSearchInput = document.getElementById('eventSearchInput');
+const clearSearchBtn = document.getElementById('clearSearchBtn');
+const searchStats = document.getElementById('searchStats');
 
 // Initialize Application
 document.addEventListener('DOMContentLoaded', async () => {
@@ -107,29 +111,6 @@ function renderGuestHeader() {
   userProfileSection.style.display = 'none';
   myRegNavBtn.style.display = 'none';
   adminNavBtn.style.display = 'none';
-}
-
-// Quick Login Demo Helper
-async function quickLogin(email, password) {
-  try {
-    const res = await fetch(`${API_BASE}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-      credentials: 'include'
-    });
-    const data = await res.json();
-    if (res.ok && data && data.data && data.data.user) {
-      currentUser = data.data.user;
-      renderUserHeader();
-      showToast(`Logged in as ${currentUser.name} (${currentUser.role})`, 'success');
-      loadEvents();
-    } else {
-      showToast(data.message || 'Login failed', 'error');
-    }
-  } catch (err) {
-    showToast('Network error during login.', 'error');
-  }
 }
 
 // Modal Handlers
@@ -285,58 +266,105 @@ async function loadEvents() {
     const result = await res.json();
 
     if (!result || !result.success || !result.data || !Array.isArray(result.data.events) || result.data.events.length === 0) {
+      allLoadedEvents = [];
       eventsGrid.innerHTML = `<div class="empty-state">No events available at this time.</div>`;
+      if (searchStats) searchStats.textContent = '0 events found';
       return;
     }
 
-    eventsGrid.innerHTML = result.data.events.map((event) => {
-      const dateFormatted = new Date(event.dateTime).toLocaleString('en-US', {
-        dateStyle: 'medium',
-        timeStyle: 'short'
-      });
-
-      const registered = event.registeredCount || 0;
-      const capacity = event.capacity || 1;
-      const pct = Math.min(100, Math.round((registered / capacity) * 100));
-
-      return `
-        <div class="card event-card">
-          <div>
-            <div class="event-header">
-              <h3 class="event-title">${escapeHtml(event.title)}</h3>
-              <span class="badge badge-${(event.status || 'DRAFT').toLowerCase()}">${event.status}</span>
-            </div>
-            <p class="event-desc">${escapeHtml(event.description)}</p>
-          </div>
-
-          <div>
-            <div class="event-meta">
-              <div class="meta-row"><span>📍</span> <strong>${escapeHtml(event.venue)}</strong></div>
-              <div class="meta-row"><span>⏰</span> ${dateFormatted}</div>
-              
-              <div class="capacity-bar-container">
-                <div class="capacity-labels">
-                  <span>Capacity: ${registered} / ${capacity} Filled</span>
-                  <span>${event.availableSeats ?? 0} Left</span>
-                </div>
-                <div class="progress-track">
-                  <div class="progress-fill ${event.isFull ? 'full' : ''}" style="width: ${pct}%"></div>
-                </div>
-              </div>
-            </div>
-
-            <button class="btn btn-primary btn-block" 
-              ${event.isFull || event.status !== 'PUBLISHED' ? 'disabled' : ''} 
-              onclick="handleRegister('${event._id}')">
-              ${event.isFull ? '🚫 Event Full' : event.status !== 'PUBLISHED' ? 'Not Available' : '🎟️ Register Now'}
-            </button>
-          </div>
-        </div>
-      `;
-    }).join('');
+    allLoadedEvents = result.data.events;
+    handleSearchInput(); // Render with current search query or full list
   } catch (err) {
     eventsGrid.innerHTML = '<div class="empty-state">Failed to reach server.</div>';
   }
+}
+
+// Event Search & Filter Handler
+function handleSearchInput() {
+  const query = (eventSearchInput ? eventSearchInput.value : '').toLowerCase().trim();
+
+  if (clearSearchBtn) {
+    clearSearchBtn.style.display = query ? 'block' : 'none';
+  }
+
+  let filtered = allLoadedEvents;
+  if (query) {
+    filtered = allLoadedEvents.filter((ev) => {
+      const titleMatch = (ev.title || '').toLowerCase().includes(query);
+      const venueMatch = (ev.venue || '').toLowerCase().includes(query);
+      const descMatch = (ev.description || '').toLowerCase().includes(query);
+      return titleMatch || venueMatch || descMatch;
+    });
+  }
+
+  if (searchStats) {
+    searchStats.textContent = query 
+      ? `Found ${filtered.length} of ${allLoadedEvents.length} events`
+      : `Showing ${allLoadedEvents.length} events`;
+  }
+
+  renderEventsGrid(filtered);
+}
+
+function clearSearch() {
+  if (eventSearchInput) {
+    eventSearchInput.value = '';
+    eventSearchInput.focus();
+  }
+  handleSearchInput();
+}
+
+function renderEventsGrid(eventsToRender) {
+  if (!eventsToRender.length) {
+    eventsGrid.innerHTML = '<div class="empty-state">No events match your search query. Try another keyword.</div>';
+    return;
+  }
+
+  eventsGrid.innerHTML = eventsToRender.map((event) => {
+    const dateFormatted = new Date(event.dateTime).toLocaleString('en-US', {
+      dateStyle: 'medium',
+      timeStyle: 'short'
+    });
+
+    const registered = event.registeredCount || 0;
+    const capacity = event.capacity || 1;
+    const pct = Math.min(100, Math.round((registered / capacity) * 100));
+
+    return `
+      <div class="card event-card">
+        <div>
+          <div class="event-header">
+            <h3 class="event-title">${escapeHtml(event.title)}</h3>
+            <span class="badge badge-${(event.status || 'DRAFT').toLowerCase()}">${event.status}</span>
+          </div>
+          <p class="event-desc">${escapeHtml(event.description)}</p>
+        </div>
+
+        <div>
+          <div class="event-meta">
+            <div class="meta-row"><span>📍</span> <strong>${escapeHtml(event.venue)}</strong></div>
+            <div class="meta-row"><span>⏰</span> ${dateFormatted}</div>
+            
+            <div class="capacity-bar-container">
+              <div class="capacity-labels">
+                <span>Capacity: ${registered} / ${capacity} Filled</span>
+                <span>${event.availableSeats ?? 0} Left</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill ${event.isFull ? 'full' : ''}" style="width: ${pct}%"></div>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn btn-primary btn-block" 
+            ${event.isFull || event.status !== 'PUBLISHED' ? 'disabled' : ''} 
+            onclick="handleRegister('${event._id}')">
+            ${event.isFull ? '🚫 Event Full' : event.status !== 'PUBLISHED' ? 'Not Available' : '🎟️ Register Now'}
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 // 2. Register for Event Handler
