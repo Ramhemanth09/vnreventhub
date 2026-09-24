@@ -11,30 +11,30 @@ const { errorHandler, notFound } = require('./middleware/error.middleware');
 
 const app = express();
 
-// 1. Trust Proxy for Cloud Hosting (Render, Vercel, Railway, Heroku, AWS)
+// 1. Trust Proxy for Cloud Hosting (Render, Vercel, Railway, Heroku)
 app.set('trust proxy', 1);
 
 // 2. Core Middlewares
 app.use(
   cors({
-    origin: true, // Allow requesting origin
-    credentials: true // Allow cookies across origins
+    origin: true,
+    credentials: true
   })
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// 3. Serve Static Frontend Web Portal
+// 3. Serve Static Frontend Web Portal (from public or root)
 app.use(express.static(path.join(__dirname, '../public')));
+app.use(express.static(path.join(__dirname, '..')));
 
-// 4. API Health Check Endpoint (For Cloud Deployment Health Checks)
+// 4. API Health Check Endpoint
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
     success: true,
     message: 'Campus Event Management Service is live and healthy',
-    environment: process.env.NODE_ENV || 'production',
     timestamp: new Date().toISOString()
   });
 });
@@ -45,12 +45,16 @@ app.use('/api/events', eventRoutes);
 app.use('/api/registrations', registrationRoutes);
 app.use('/api/admin', adminRoutes);
 
-// 6. Frontend SPA Fallback Route (Non-API requests serve index.html)
+// 6. Frontend SPA Fallback Route
 app.get('*', (req, res, next) => {
   if (req.originalUrl.startsWith('/api')) {
     return next();
   }
-  res.sendFile(path.join(__dirname, '../public/index.html'));
+  const publicIndex = path.join(__dirname, '../public/index.html');
+  const rootIndex = path.join(__dirname, '../index.html');
+  res.sendFile(publicIndex, (err) => {
+    if (err) res.sendFile(rootIndex);
+  });
 });
 
 // 7. 404 Handler for Unmatched API Endpoints
