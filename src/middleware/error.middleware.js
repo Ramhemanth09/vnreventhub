@@ -54,6 +54,9 @@ const errorHandler = (err, req, res, next) => {
   if (err.name === 'ValidationError') error = handleValidationErrorDB(err);
   if (err.name === 'JsonWebTokenError') error = handleJWTError();
   if (err.name === 'TokenExpiredError') error = handleJWTExpiredError();
+  if (err.name === 'MongooseServerSelectionError' || (err.message && err.message.includes('buffering timed out'))) {
+    error = new AppError('Database connection unavailable. Please ensure MongoDB is running or check MONGO_URI in .env.', 503);
+  }
 
   const statusCode = error.statusCode || 500;
   const message = error.message || 'Internal Server Error';

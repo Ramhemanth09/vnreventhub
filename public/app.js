@@ -73,12 +73,14 @@ async function checkAuth() {
     const res = await fetch(`${API_BASE}/auth/me`, { credentials: 'include' });
     if (res.ok) {
       const data = await res.json();
-      currentUser = data.data.user;
-      renderUserHeader();
-    } else {
-      currentUser = null;
-      renderGuestHeader();
+      if (data && data.data && data.data.user) {
+        currentUser = data.data.user;
+        renderUserHeader();
+        return;
+      }
     }
+    currentUser = null;
+    renderGuestHeader();
   } catch (err) {
     currentUser = null;
     renderGuestHeader();
@@ -117,7 +119,7 @@ async function quickLogin(email, password) {
       credentials: 'include'
     });
     const data = await res.json();
-    if (res.ok) {
+    if (res.ok && data && data.data && data.data.user) {
       currentUser = data.data.user;
       renderUserHeader();
       showToast(`Logged in as ${currentUser.name} (${currentUser.role})`, 'success');
@@ -126,7 +128,7 @@ async function quickLogin(email, password) {
       showToast(data.message || 'Login failed', 'error');
     }
   } catch (err) {
-    showToast('Network error during login', 'error');
+    showToast('Network error during login. Make sure MongoDB & backend are running.', 'error');
   }
 }
 
@@ -166,7 +168,7 @@ function setupForms() {
         credentials: 'include'
       });
       const data = await res.json();
-      if (res.ok) {
+      if (res.ok && data && data.data && data.data.user) {
         currentUser = data.data.user;
         closeModal('loginModal');
         renderUserHeader();
@@ -176,7 +178,7 @@ function setupForms() {
         showToast(data.message || 'Login failed', 'error');
       }
     } catch (err) {
-      showToast('Network error', 'error');
+      showToast('Network error during login', 'error');
     }
   });
 
@@ -196,7 +198,7 @@ function setupForms() {
         credentials: 'include'
       });
       const data = await res.json();
-      if (res.ok) {
+      if (res.ok && data && data.data && data.data.user) {
         currentUser = data.data.user;
         closeModal('registerModal');
         renderUserHeader();
@@ -207,7 +209,7 @@ function setupForms() {
         showToast(errMsg || 'Registration failed', 'error');
       }
     } catch (err) {
-      showToast('Network error', 'error');
+      showToast('Network error during registration', 'error');
     }
   });
 
@@ -238,7 +240,7 @@ function setupForms() {
         showToast(errMsg || 'Failed to create event', 'error');
       }
     } catch (err) {
-      showToast('Network error', 'error');
+      showToast('Network error while creating event', 'error');
     }
   });
 }
@@ -266,8 +268,9 @@ async function loadEvents() {
     const res = await fetch(`${API_BASE}/events`, { credentials: 'include' });
     const result = await res.json();
 
-    if (!result.success || !result.data.events.length) {
-      eventsGrid.innerHTML = '<div class="empty-state">No events available at this time.</div>';
+    if (!result || !result.success || !result.data || !Array.isArray(result.data.events) || result.data.events.length === 0) {
+      const msg = (result && result.message) ? result.message : 'No events available. (Run <code>npm run seed</code> in terminal to create sample events).';
+      eventsGrid.innerHTML = `<div class="empty-state">${msg}</div>`;
       return;
     }
 
@@ -277,14 +280,16 @@ async function loadEvents() {
         timeStyle: 'short'
       });
 
-      const pct = Math.min(100, Math.round((event.registeredCount / event.capacity) * 100));
+      const registered = event.registeredCount || 0;
+      const capacity = event.capacity || 1;
+      const pct = Math.min(100, Math.round((registered / capacity) * 100));
 
       return `
         <div class="card event-card">
           <div>
             <div class="event-header">
               <h3 class="event-title">${escapeHtml(event.title)}</h3>
-              <span class="badge badge-${event.status.toLowerCase()}">${event.status}</span>
+              <span class="badge badge-${(event.status || 'DRAFT').toLowerCase()}">${event.status}</span>
             </div>
             <p class="event-desc">${escapeHtml(event.description)}</p>
           </div>
@@ -296,8 +301,8 @@ async function loadEvents() {
               
               <div class="capacity-bar-container">
                 <div class="capacity-labels">
-                  <span>Capacity: ${event.registeredCount} / ${event.capacity} Filled</span>
-                  <span>${event.availableSeats} Left</span>
+                  <span>Capacity: ${registered} / ${capacity} Filled</span>
+                  <span>${event.availableSeats ?? 0} Left</span>
                 </div>
                 <div class="progress-track">
                   <div class="progress-fill ${event.isFull ? 'full' : ''}" style="width: ${pct}%"></div>
@@ -315,7 +320,7 @@ async function loadEvents() {
       `;
     }).join('');
   } catch (err) {
-    eventsGrid.innerHTML = '<div class="empty-state">Failed to load events. Ensure MongoDB & Server are running.</div>';
+    eventsGrid.innerHTML = '<div class="empty-state">Failed to reach server. Please make sure MongoDB and Express are running.</div>';
   }
 }
 
@@ -351,7 +356,7 @@ async function loadMyRegistrations() {
     const res = await fetch(`${API_BASE}/registrations/my`, { credentials: 'include' });
     const result = await res.json();
 
-    if (!result.success || !result.data.registrations.length) {
+    if (!result || !result.success || !result.data || !Array.isArray(result.data.registrations) || result.data.registrations.length === 0) {
       myRegistrationsList.innerHTML = '<div class="empty-state">You have not registered for any events yet.</div>';
       return;
     }
@@ -369,7 +374,7 @@ async function loadMyRegistrations() {
               <h3>${escapeHtml(ev.title || 'Event Removed')}</h3>
               <p class="section-desc">📍 ${escapeHtml(ev.venue || 'N/A')} • ⏰ ${dateFormatted}</p>
             </div>
-            <span class="badge badge-${reg.status.toLowerCase()}">${reg.status}</span>
+            <span class="badge badge-${(reg.status || 'REGISTERED').toLowerCase()}">${reg.status}</span>
           </div>
           <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
             <span style="font-size: 0.8rem; color: var(--text-secondary);">Registered on: ${new Date(reg.registeredAt).toLocaleDateString()}</span>
@@ -415,7 +420,7 @@ async function loadAdminEvents() {
     const res = await fetch(`${API_BASE}/events`, { credentials: 'include' });
     const result = await res.json();
 
-    if (!result.success || !result.data.events.length) {
+    if (!result || !result.success || !result.data || !Array.isArray(result.data.events) || result.data.events.length === 0) {
       adminEventsList.innerHTML = '<div class="empty-state">No events found.</div>';
       return;
     }
@@ -434,8 +439,8 @@ async function loadAdminEvents() {
           ${result.data.events.map(ev => `
             <tr>
               <td><strong>${escapeHtml(ev.title)}</strong><br><small style="color:var(--text-secondary)">${escapeHtml(ev.venue)}</small></td>
-              <td>${ev.registeredCount} / ${ev.capacity}</td>
-              <td><span class="badge badge-${ev.status.toLowerCase()}">${ev.status}</span></td>
+              <td>${ev.registeredCount ?? 0} / ${ev.capacity}</td>
+              <td><span class="badge badge-${(ev.status || 'DRAFT').toLowerCase()}">${ev.status}</span></td>
               <td>
                 ${ev.status === 'DRAFT' ? `<button class="btn btn-outline btn-sm" onclick="adminPublishEvent('${ev._id}')">Publish</button>` : ''}
                 ${ev.status !== 'CANCELLED' ? `<button class="btn btn-outline-danger btn-sm" onclick="adminCancelEvent('${ev._id}')">Cancel</button>` : '<small>Cancelled</small>'}
@@ -496,7 +501,7 @@ async function loadAdminRegistrations() {
     const res = await fetch(`${API_BASE}/admin/registrations`, { credentials: 'include' });
     const result = await res.json();
 
-    if (!result.success || !result.data.registrations.length) {
+    if (!result || !result.success || !result.data || !Array.isArray(result.data.registrations) || result.data.registrations.length === 0) {
       adminRegistrationsList.innerHTML = '<div class="empty-state">No student registrations recorded yet.</div>';
       return;
     }
@@ -516,7 +521,7 @@ async function loadAdminRegistrations() {
             <tr>
               <td><strong>${escapeHtml(reg.user ? reg.user.name : 'Unknown')}</strong><br><small style="color:var(--text-secondary)">${escapeHtml(reg.user ? reg.user.email : '')}</small></td>
               <td>${escapeHtml(reg.event ? reg.event.title : 'Deleted Event')}</td>
-              <td><span class="badge badge-${reg.status.toLowerCase()}">${reg.status}</span></td>
+              <td><span class="badge badge-${(reg.status || 'REGISTERED').toLowerCase()}">${reg.status}</span></td>
               <td>
                 <select onchange="adminUpdateRegStatus('${reg._id}', this.value)" style="padding: 0.2rem 0.5rem; font-size: 0.78rem;">
                   <option value="REGISTERED" ${reg.status === 'REGISTERED' ? 'selected' : ''}>REGISTERED</option>

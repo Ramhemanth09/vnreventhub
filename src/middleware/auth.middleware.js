@@ -1,5 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { getDBStatus } = require('../config/db');
+const memoryStore = require('../config/memoryStore');
 const AppError = require('../utils/AppError');
 
 /**
@@ -29,8 +31,14 @@ const protect = async (req, res, next) => {
     // 2) Verify token signature and expiration
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // 3) Check if user still exists in database
-    const currentUser = await User.findById(decoded.id);
+    // 3) Check if user still exists
+    let currentUser;
+    if (getDBStatus()) {
+      currentUser = await User.findById(decoded.id);
+    } else {
+      currentUser = memoryStore.users.find((u) => u._id.toString() === decoded.id.toString());
+    }
+
     if (!currentUser) {
       return next(
         new AppError('The user belonging to this token no longer exists.', 401)
@@ -74,13 +82,18 @@ const optionalAuth = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const currentUser = await User.findById(decoded.id);
+    let currentUser;
+    if (getDBStatus()) {
+      currentUser = await User.findById(decoded.id);
+    } else {
+      currentUser = memoryStore.users.find((u) => u._id.toString() === decoded.id.toString());
+    }
+
     if (currentUser) {
       req.user = currentUser;
     }
     next();
   } catch (error) {
-    // Silently continue for optional auth
     next();
   }
 };
